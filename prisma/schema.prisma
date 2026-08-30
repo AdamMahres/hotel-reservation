@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+ 
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  password     String // will be hashed in Level 4
+  fullName     String
+  role         Role          @default(GUEST)
+  reservations Reservation[] // one user → many reservations (1NF: no repeating columns)
+  createdAt    DateTime      @default(now())
+}
+
+model Room {
+  id           Int           @id @default(autoincrement())
+  roomNumber   String        @unique // "101", "102"
+  roomTypeId   Int // foreign key → RoomType
+  roomType     RoomType      @relation(fields: [roomTypeId], references: [id])
+  reservations Reservation[] // one room → many reservations over time
+}
+
+model RoomType {
+  id        Int     @id @default(autoincrement())
+  name      String  @unique // "Single", "Double", "Suite"
+  basePrice Decimal // price lives ONCE here — 3NF: no price duplicated per room
+  capacity  Int // max guests for this type
+  rooms     Room[] // one type → many rooms
+}
+
+model Reservation {
+  id             Int               @id @default(autoincrement())
+  userId         Int // FK → User
+  user           User              @relation(fields: [userId], references: [id])
+  roomId         Int // FK → Room
+  room           Room              @relation(fields: [roomId], references: [id])
+  checkIn        DateTime
+  checkOut       DateTime
+  priceAtBooking Decimal // intentional snapshot for historical accuracy
+  status         ReservationStatus @default(CONFIRMED)
+  payment        Payment? // optional one-to-one
+  createdAt      DateTime          @default(now())
+}
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  reservationId Int           @unique // @unique enforces one payment per reservation
+  reservation   Reservation   @relation(fields: [reservationId], references: [id])
+  amount        Decimal
+  status        PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+}
+
+enum Role {
+  GUEST
+  ADMIN
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+}
