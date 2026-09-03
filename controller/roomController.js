@@ -100,4 +100,40 @@ async function deleteRoom(req, res) {
   }
 }
 
-module.exports = {getAllRooms, getRoomById, createRoom, updateRoom, deleteRoom}
+
+async function getAvailableRooms(req, res) {
+    try {
+        const { checkIn , checkOut } = req.query
+
+        if(!checkIn || !checkOut){
+            return res.status(400).json({error: "checkIn and checkOut are required !!"})
+        }
+
+        const checkInDate = new Date(checkIn)
+        const checkOutDate = new Date(checkOut)
+
+        if (checkInDate >= checkOutDate){
+            return res.status(400).json({error : 'checkOut must be after checkIn' })
+        }
+
+        const availableRooms = await prisma.room.findMany({
+            where: {
+                reservations: {
+                    none: {
+                        status: 'CONFIRMED',
+                        checkIn : {lt : checkOutDate},
+                        checkOut : {gt: checkInDate}
+                    }
+                }
+            },
+            include: {roomType: true}
+        })
+
+        res.status(200).json(availableRooms)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({error: 'Failed to fetch available rooms'})
+    }
+}
+
+module.exports = {getAllRooms, getRoomById, createRoom, updateRoom, deleteRoom, getAvailableRooms}

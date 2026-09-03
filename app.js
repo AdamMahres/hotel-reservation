@@ -7,4 +7,9 @@ app.get('/health', (req, res) => {
 
 const roomRoutes = require('./routes/roomRoutes')
 app.use('/rooms', roomRoutes)
-module.exports = app
+
+const reservationRoutes = require('./routes/reservationRoutes');
+app.use('/reservations', reservationRoutes);
+
+
+module.exports = app  
