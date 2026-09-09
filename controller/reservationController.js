@@ -4,9 +4,10 @@ const prisma = require('../prisma/client')
 
 async function createReservation(req, res){
     try {
-        const { userId, roomId, checkIn, checkOut } = req.body;
-        if (!userId || !roomId || !checkIn || !checkOut) {
-            return res.status(400).json({ error: 'userId, roomId, checkIn, and checkOut are required' });
+        const { roomId, checkIn, checkOut } = req.body
+        const userId = req.user.userId
+        if ( !roomId || !checkIn || !checkOut) {
+            return res.status(400).json({ error: 'roomId, checkIn, and checkOut are required' });
     }
 
     const checkInDate = new Date(checkIn)
@@ -44,7 +45,7 @@ async function createReservation(req, res){
 
             return await tx.reservation.create({
                 data: {
-                    userId: parseInt(userId),
+                    userId: userId,
                     roomId: parseInt(roomId),
                     checkIn: checkInDate,
                     checkOut: checkOutDate,

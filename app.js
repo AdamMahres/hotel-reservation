@@ -11,5 +11,7 @@ app.use('/rooms', roomRoutes)
 const reservationRoutes = require('./routes/reservationRoutes');
 app.use('/reservations', reservationRoutes);
 
+const authRoutes = require('./routes/authRoutes')
+app.use('/auth', authRoutes)
 
 module.exports = app  
